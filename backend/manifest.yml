@@ -1,0 +1,188 @@
+name: FlavorVerse
+
+entities:
+  users:
+    authenticable: true
+    properties:
+      - name: name
+        type: string
+        validation:
+          required: true
+      - name: email
+        type: email
+        validation:
+          required: true
+      - name: bio
+        type: textarea
+      - name: avatar
+        type: image
+        options:
+          sizes:
+            thumbnail:
+              width: 100
+              height: 100
+            profile:
+              width: 300
+              height: 300
+      - name: role
+        type: choice
+        options:
+          values: [user, admin]
+        default: user
+    belongsToMany:
+      - name: favoriteRecipes
+        entity: recipes
+    policies:
+      create:
+        - access: admin
+      read:
+        - access: public
+      update:
+        - access: restricted
+          allow: users
+          condition: self
+        - access: admin
+      delete:
+        - access: admin
+      signup:
+        - access: public
+
+  recipes:
+    properties:
+      - name: title
+        type: string
+        validation:
+          required: true
+          minLength: 5
+          maxLength: 150
+      - name: description
+        type: textarea
+        validation:
+          required: true
+          maxLength: 500
+      - name: ingredients
+        type: textarea
+        helpText: 'List each ingredient on a new line.'
+        validation:
+          required: true
+      - name: instructions
+        type: richText
+        validation:
+          required: true
+      - name: cookingTime
+        type: number
+        helpText: 'Time in minutes'
+        validation:
+          required: true
+          min: 1
+      - name: difficulty
+        type: choice
+        options:
+          values: [Easy, Medium, Hard]
+        default: Medium
+      - name: mainImage
+        type: image
+        validation:
+          required: true
+        options:
+          sizes:
+            thumbnail:
+              width: 400
+              height: 300
+            large:
+              width: 1200
+              height: 900
+    belongsTo:
+      - name: author
+        entity: users
+    belongsToMany:
+      - name: categories
+        entity: categories
+    policies:
+      create:
+        - access: authenticated
+      read:
+        - access: public
+      update:
+        - access: restricted
+          allow: users
+          condition: self
+        - access: admin
+      delete:
+        - access: restricted
+          allow: users
+          condition: self
+        - access: admin
+
+  reviews:
+    properties:
+      - name: rating
+        type: number
+        validation:
+          required: true
+          min: 1
+          max: 5
+      - name: comment
+        type: textarea
+        validation:
+          required: true
+          maxLength: 1000
+      - name: createdAt
+        type: timestamp
+        default: now
+    belongsTo:
+      - name: recipe
+        entity: recipes
+      - name: author
+        entity: users
+    policies:
+      create:
+        - access: authenticated
+      read:
+        - access: public
+      update:
+        - access: restricted
+          allow: users
+          condition: self
+        - access: admin
+      delete:
+        - access: restricted
+          allow: users
+          condition: self
+        - access: admin
+
+  categories:
+    properties:
+      - name: name
+        type: string
+        validation:
+          required: true
+    belongsToMany:
+      - name: recipes
+        entity: recipes
+    policies:
+      create:
+        - access: admin
+      read:
+        - access: public
+      update:
+        - access: admin
+      delete:
+        - access: admin
+
+endpoints:
+  health:
+    path: /health
+    method: GET
+    handler: health
+    policies:
+      - access: public
+
+
+# Health check endpoint for connection testing
+endpoints:
+  health:
+    path: /api/health
+    method: GET
+    policies: []
+    handler: healthCheck
